@@ -4,9 +4,20 @@ import java.lang.reflect.*;
 import java.util.*;
 
 /**
- * Represents a composite listener able to act as the listener itself allowing
- * to "propagate" a call to the listeners contained.
- * 
+ * Represents a composite listener of the specified type able to proxy calls to the contained items.
+ *
+ * <p>
+ * Usage:
+ * </p>
+ * <pre>
+ *     CompositeListener&lt;MyListener&gt; compositeListener = CompositeListener.of(MyListener.class);
+ *     MyListener mylistener = compositeListener.proxy();
+ *     compositeListener.add(a);
+ *     compositeListener.add(b);
+ *
+ *     mylistener.mycall(xxx); // this will propagate the call to 'a.mycall' and 'b.mycall'
+ * </pre>
+ *
  * <p>
  * PAY ATTENTION: it is a responsibility of the listener implementations to handle all
  * sort of exceptions. This object prevents that those error stop the notification of the
@@ -45,18 +56,12 @@ public class CompositeListener<T> {
 		Object proxy = Proxy.newProxyInstance(
 			Thread.currentThread().getContextClassLoader(), 
 			new Class<?>[]{ itemsType }, 
-			new CompositeListener._InvocationHandler(this.listeners)
+			new CompositeListener._InvocationHandler()
 		);
 		return itemsType.cast(proxy);
 	}
 	
-	public static class _InvocationHandler implements InvocationHandler {
-
-		private final List<?> listeners;
-
-		public _InvocationHandler(List<?> listeners) {
-			this.listeners = listeners;
-		}
+	private class _InvocationHandler implements InvocationHandler {
 
 		@Override
 		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
