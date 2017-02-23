@@ -29,7 +29,7 @@ public class ExtendedProperties extends Properties
     return super.getProperty(property);
   }
 
-  
+
   public ExtendedProperties sub(String prefix)
   {
     String completePrefix = prefix + ".";
