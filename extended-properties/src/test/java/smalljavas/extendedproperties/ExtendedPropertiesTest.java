@@ -1,5 +1,6 @@
 package smalljavas.extendedproperties;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -7,20 +8,33 @@ import static org.junit.Assert.*;
 public class ExtendedPropertiesTest
 {
 
-  @Test public void evaluate_placeholders() {
-    ExtendedProperties props = new ExtendedProperties();
-    props.setProperty("key", "Hello");
-    props.setProperty("greeting", "${key} world");
+  private ExtendedProperties eprops = new ExtendedProperties();
 
-    assertEquals("Hello world", props.getProperty("greeting"));
+  @Before public void setup() {
+    System.clearProperty("key");
+  }
+
+  @Test public void evaluate_placeholders() {
+    eprops.setProperty("key", "Hello");
+    eprops.setProperty("greeting", "${key} world");
+
+    assertEquals("Hello world", eprops.getProperty("greeting"));
+  }
+
+  @Test public void system_props_have_an_higher_priority() {
+    System.setProperty("key", "Ciao");
+
+    eprops.setProperty("key", "Hello");
+    eprops.setProperty("greeting", "${key} world");
+
+    assertEquals("Ciao world", eprops.getProperty("greeting"));
   }
 
   @Test public void sub() {
-    ExtendedProperties props = new ExtendedProperties();
-    props.setProperty("greeting.friends", "Hello");
-    props.setProperty("greeting.polite", "Good morning");
+    eprops.setProperty("greeting.friends", "Hello");
+    eprops.setProperty("greeting.polite", "Good morning");
 
-    ExtendedProperties subprops = props.sub("greeting");
+    ExtendedProperties subprops = eprops.sub("greeting");
     assertEquals("Hello", subprops.getProperty("friends"));
     assertEquals("Good morning", subprops.getProperty("polite"));
   }
