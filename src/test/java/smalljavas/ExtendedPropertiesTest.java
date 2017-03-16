@@ -1,4 +1,4 @@
-package smalljavas.extendedproperties;
+package smalljavas;
 
 import org.junit.Before;
 import org.junit.Test;

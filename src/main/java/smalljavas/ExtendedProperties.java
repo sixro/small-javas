@@ -1,4 +1,4 @@
-package smalljavas.extendedproperties;
+package smalljavas;
 
 import org.apache.commons.lang3.text.StrSubstitutor;
 

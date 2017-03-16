@@ -1,4 +1,4 @@
-package smalljavas.compositelistener;
+package smalljavas;
 
 import java.lang.reflect.*;
 import java.util.*;

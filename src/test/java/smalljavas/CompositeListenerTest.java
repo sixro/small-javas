@@ -1,4 +1,4 @@
-package smalljavas.compositelistener;
+package smalljavas;
 
 import static org.junit.Assert.*;
 
