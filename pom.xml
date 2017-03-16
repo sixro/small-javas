@@ -12,6 +12,7 @@
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 
+		<!-- Release -->
 		<tagNameFormat>v@{project.version}</tagNameFormat>
 		<releaseProfiles>release</releaseProfiles>
 		<arguments>-DskipITs</arguments>
