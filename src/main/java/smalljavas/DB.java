@@ -22,7 +22,7 @@ public class DB {
 	public void insert(Object o) {
 		// FIXME
 		// compose sql
-		String sql = newSQL("insert into ${columns} (${fields}) values (${values})", o);
+		String sql = newSQL("insert into ${table} (${columns}) values (${values})", o);
 		// execute
 	}
 
