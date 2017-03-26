@@ -1,38 +1,77 @@
 package smalljavas;
 
-import java.lang.reflect.Field;
+import java.lang.reflect.*;
+import java.sql.*;
+import java.time.LocalDate;
 import java.util.*;
 
 import javax.sql.DataSource;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.*;
 
 public class DB {
 
-	private final DataSource dataSource;
+	public static class AutoMapper<T> implements RowMapper<T> {
+
+		private final Class<T> type;
+
+		public AutoMapper(Class<T> type) {
+			this.type = type;
+		}
+
+		@Override
+		public T mapRow(ResultSet rs, int row) throws SQLException {
+			
+			try {
+				Constructor<T> constructor = type.getDeclaredConstructor();
+				if (!constructor.isAccessible()) constructor.setAccessible(true);
+				T obj = constructor.newInstance();
+				Field[] fields = type.getDeclaredFields();
+				for (Field f: fields) {
+					System.out.println(f.getName());
+					if (! f.isAccessible()) f.setAccessible(true);
+					// FIXME performance
+					String column = toSnakeCase(Collections.singletonList(f.getName())).get(0);
+					Object value = rs.getObject(column);
+					
+					// FIXME handle enums
+					// FIXME handle all datetime types
+					// FIXME int
+					if (ID.class.isAssignableFrom(f.getType()))
+						value = ID.valueOf((String) value);
+					if (LocalDate.class.isAssignableFrom(f.getType()))
+						value = ((Timestamp) value).toLocalDateTime().toLocalDate();
+					f.set(obj, value);
+				}
+				return obj;
+			} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+	}
+
 	private final NamedParameterJdbcTemplate jdbc;
 
 	public DB(DataSource dataSource) {
-		this.dataSource = dataSource;
 		this.jdbc = new NamedParameterJdbcTemplate(dataSource);
 	}
 
 	public void insert(Object o) {
-		// FIXME
-		// compose sql
-		String sql = newSQL("insert into ${table} (${columns}) values (${values})", o);
-		// execute
+		String sql = newSQL("insert into ${table} (${columns}) values (${values})", o.getClass());
+		jdbc.update(sql, newParamMap(o));
 	}
 
 	public <T> T fetch(Class<T> type, ID id) {
-		// FIXME
-		return null;
+		String sql = newSQL("select ${columns} from ${table} where id = :id", type);
+		T object = jdbc.queryForObject(sql, Collections.singletonMap("id", (Object) id.toString()), new DB.AutoMapper<T>(type));
+		return object;
 	}
 
-	static String newSQL(String template, Object o) {
-		Class<? extends Object> type = o.getClass();
+	static String newSQL(String template, Class<?> type) {
 		List<String> fieldNames = toNames(type.getDeclaredFields());
 
 		Map<String, Object> valuesByPlaceholder = new HashMap<>();
@@ -40,6 +79,23 @@ public class DB {
 		valuesByPlaceholder.put("columns", StringUtils.join(toSnakeCase(fieldNames), ", ").toUpperCase());
 		valuesByPlaceholder.put("values", StringUtils.join(toPrefixed(fieldNames, ":"), ", "));
 		return StrSubstitutor.replace(template, valuesByPlaceholder);
+	}
+	
+	static Map<String, Object> newParamMap(Object o) {
+		Map<String, Object> map = new LinkedHashMap<>();
+		Field[] fields = o.getClass().getDeclaredFields();
+		for (Field f: fields) {
+			try {
+				if (!f.isAccessible()) f.setAccessible(true);
+				Object value = f.get(o);
+				if (value instanceof ID)
+					value = ((ID) value).toString();
+				map.put(f.getName(), value);
+			} catch (IllegalArgumentException | IllegalAccessException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		return map;
 	}
 
 	private static List<String> toPrefixed(List<String> names, String prefix) {
