@@ -9,6 +9,8 @@ import java.util.*;
 import org.apache.commons.dbcp2.*;
 import org.junit.Test;
 
+import smalljavas.Customer.Gender;
+
 public class DBTest {
 
 	@Test
@@ -21,7 +23,7 @@ public class DBTest {
 		
 		BasicDataSource dataSource = BasicDataSourceFactory.createDataSource(props);
 		DB db = new DB(dataSource);
-		Customer c = new Customer("Mario", "Rossi", LocalDate.parse("1970-01-02"), "mr", "m");
+		Customer c = new Customer("Mario", "Rossi", LocalDate.parse("1970-01-02"), "mr", Gender.male);
 		db.insert(c);
 		Customer fetched = db.fetch(Customer.class, c.getID());
 		
@@ -32,24 +34,31 @@ public class DBTest {
 
 	@Test
 	public void newSQL_returns_expected_insert_statement() {
-		Customer c = new Customer("Mario", "Rossi", LocalDate.parse("1970-01-02"), "mr", "m");
+		Customer c = new Customer("Mario", "Rossi", LocalDate.parse("1970-01-02"), "mr", Gender.male);
 		String sql = DB.newSQL("insert into ${table} (${columns}) values (${values})", c.getClass());
 		assertEquals("insert into CUSTOMERS (ID, FIRST_NAME, LAST_NAME, BIRTH_DATE, TITLE, GENDER) values (:id, :firstName, :lastName, :birthDate, :title, :gender)", sql);
 	}
 	
 	@Test
 	public void newParamMap_returns_expected_map() {
-		Customer c = new Customer("Mario", "Rossi", LocalDate.parse("1970-01-02"), "mr", "m");
+		Customer c = new Customer("Mario", "Rossi", LocalDate.parse("1970-01-02"), "mr", Gender.male);
 		Map<String, Object> map = DB.newParamMap(c);
 		assertThat(map, hasEntry("firstName", (Object) "Mario"));
 	}
 
 	@Test
 	public void newParamMap_handle_ID() {
-		Customer c = new Customer("Mario", "Rossi", LocalDate.parse("1970-01-02"), "mr", "m");
+		Customer c = new Customer("Mario", "Rossi", LocalDate.parse("1970-01-02"), "mr", Gender.male);
 		Map<String, Object> map = DB.newParamMap(c);
 		assertThat(map, hasKey("id"));
 		assertTrue(map.get("id") instanceof String);
+	}
+
+	@Test
+	public void newParamMap_handle_enums() {
+		Customer c = new Customer("Mario", "Rossi", LocalDate.parse("1970-01-02"), "mr", Gender.female);
+		Map<String, Object> map = DB.newParamMap(c);
+		assertThat(map, hasEntry("gender", (Object) "female"));
 	}
 
 }

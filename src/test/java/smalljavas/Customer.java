@@ -6,12 +6,14 @@ import org.apache.commons.lang3.builder.*;
 
 public class Customer {
 
+	public static enum Gender { male, female };
+	
 	private final ID id;
 	private final String firstName;
 	private final String lastName;
 	private final LocalDate birthDate;
 	private final String title;
-	private final String gender;
+	private final Gender gender;
 
 	@SuppressWarnings("unused")
 	private Customer() {
@@ -23,7 +25,7 @@ public class Customer {
 		this.gender = null;
 	}
 	
-	public Customer(String firstName, String lastName, LocalDate birthDate, String title, String gender) {
+	public Customer(String firstName, String lastName, LocalDate birthDate, String title, Gender gender) {
 		this.id = ID.newID("cus");
 		this.firstName = firstName;
 		this.lastName = lastName;
@@ -52,7 +54,7 @@ public class Customer {
 		return title;
 	}
 
-	public String getGender() {
+	public Gender getGender() {
 		return gender;
 	}
 
