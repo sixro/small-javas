@@ -63,6 +63,23 @@ public class DB {
 		LOG.info("... {} identified by {} deleted in {} ms", type.getSimpleName(), id, System.currentTimeMillis() -start);
 	}
 
+	public void delete(Object o) {
+		long start = System.currentTimeMillis();
+		LOG.info("deleting {} ...", o);
+		
+		Class<? extends Object> type = o.getClass();
+		try {
+			Field field = type.getDeclaredField("id");
+			if (! field.isAccessible()) field.setAccessible(true);
+			
+			delete(type, (ID) field.get(o));
+			
+			LOG.info("... {} deleted in {} ms", o, System.currentTimeMillis() -start);
+		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	static String newSQL(String template, Class<?> type) {
 		List<String> fieldNames = toNames(type.getDeclaredFields());
 

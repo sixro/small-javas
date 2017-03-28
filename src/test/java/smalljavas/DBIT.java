@@ -7,15 +7,15 @@ import java.time.LocalDate;
 import java.util.*;
 
 import org.apache.commons.dbcp2.*;
-import org.junit.Test;
+import org.junit.*;
 
 import smalljavas.Customer.Gender;
 
 public class DBIT
 {
+	private DB db;
 
-	@Test
-	public void find_previously_stored_object() throws Exception {
+	@Before public void setup() throws Exception {
 		Properties props = new Properties();
 		props.setProperty("driverClassName", "com.mysql.cj.jdbc.Driver");
 		props.setProperty("url", "jdbc:mysql://localhost/smalljavas");
@@ -23,7 +23,11 @@ public class DBIT
 		props.setProperty("password", "f1gaf1ga");
 		
 		BasicDataSource dataSource = BasicDataSourceFactory.createDataSource(props);
-		DB db = new DB(dataSource);
+		db = new DB(dataSource);
+	}
+	
+	@Test
+	public void find_previously_stored_object() {
 		Customer c = new Customer("Mario", "Rossi", LocalDate.parse("1970-01-02"), "mr", Gender.male);
 		c.incrementAccessCount();
 		
@@ -36,29 +40,12 @@ public class DBIT
 	}
 
 	@Test
-	public void returns_null_when_not_found() throws Exception {
-		Properties props = new Properties();
-		props.setProperty("driverClassName", "com.mysql.cj.jdbc.Driver");
-		props.setProperty("url", "jdbc:mysql://localhost/smalljavas");
-		props.setProperty("username", "root");
-		props.setProperty("password", "f1gaf1ga");
-		
-		BasicDataSource dataSource = BasicDataSourceFactory.createDataSource(props);
-		DB db = new DB(dataSource);
-		
+	public void returns_null_when_not_found() {
 		assertNull(db.select(Customer.class, ID.valueOf("not-exists")));
 	}
 
 	@Test
-	public void delete_previously_stored_object() throws Exception {
-		Properties props = new Properties();
-		props.setProperty("driverClassName", "com.mysql.cj.jdbc.Driver");
-		props.setProperty("url", "jdbc:mysql://localhost/smalljavas");
-		props.setProperty("username", "root");
-		props.setProperty("password", "f1gaf1ga");
-		
-		BasicDataSource dataSource = BasicDataSourceFactory.createDataSource(props);
-		DB db = new DB(dataSource);
+	public void delete_previously_stored_object() {
 		Customer c = new Customer("Mario", "Rossi", LocalDate.parse("1970-01-02"), "mr", Gender.male);
 		
 		db.insert(c);
@@ -67,6 +54,18 @@ public class DBIT
 		assertNull(db.select(Customer.class, c.getID()));
 	}
 
+	@Test
+	public void delete_an_object() {
+		Customer c = new Customer("Mario", "Rossi", LocalDate.parse("1970-01-02"), "mr", Gender.male);
+		
+		db.insert(c);
+		db.delete(c);
+		
+		assertNull(db.select(Customer.class, c.getID()));
+	}
+
+	// FIXME update_previously_stored_object
+	
 	@Test
 	public void newSQL_returns_expected_insert_statement() {
 		Customer c = new Customer("Mario", "Rossi", LocalDate.parse("1970-01-02"), "mr", Gender.male);
