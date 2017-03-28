@@ -127,7 +127,6 @@ public class DB {
 					Object value = rs.getObject(column);
 					
 					// FIXME handle all datetime types
-					// FIXME int
 					if (ID.class.isAssignableFrom(f.getType()))
 						value = ID.valueOf((String) value);
 					if (LocalDate.class.isAssignableFrom(f.getType()))

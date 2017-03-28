@@ -14,6 +14,7 @@ public class Customer {
 	private final LocalDate birthDate;
 	private final String title;
 	private final Gender gender;
+	private int accessCount = 0;
 
 	@SuppressWarnings("unused")
 	private Customer() {
@@ -56,6 +57,14 @@ public class Customer {
 
 	public Gender getGender() {
 		return gender;
+	}
+
+	public int getAccessCount() {
+		return accessCount;
+	}
+
+	public void incrementAccessCount() {
+		this.accessCount++;
 	}
 
 	@Override

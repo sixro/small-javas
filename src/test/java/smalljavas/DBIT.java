@@ -25,6 +25,8 @@ public class DBIT
 		BasicDataSource dataSource = BasicDataSourceFactory.createDataSource(props);
 		DB db = new DB(dataSource);
 		Customer c = new Customer("Mario", "Rossi", LocalDate.parse("1970-01-02"), "mr", Gender.male);
+		c.incrementAccessCount();
+		
 		db.insert(c);
 		Customer fetched = db.fetch(Customer.class, c.getID());
 		
@@ -37,7 +39,7 @@ public class DBIT
 	public void newSQL_returns_expected_insert_statement() {
 		Customer c = new Customer("Mario", "Rossi", LocalDate.parse("1970-01-02"), "mr", Gender.male);
 		String sql = DB.newSQL("insert into ${table} (${columns}) values (${values})", c.getClass());
-		assertEquals("insert into CUSTOMERS (ID, FIRST_NAME, LAST_NAME, BIRTH_DATE, TITLE, GENDER) values (:id, :firstName, :lastName, :birthDate, :title, :gender)", sql);
+		assertEquals("insert into CUSTOMERS (ID, FIRST_NAME, LAST_NAME, BIRTH_DATE, TITLE, GENDER, ACCESS_COUNT) values (:id, :firstName, :lastName, :birthDate, :title, :gender, :accessCount)", sql);
 	}
 	
 	@Test
@@ -62,4 +64,11 @@ public class DBIT
 		assertThat(map, hasEntry("gender", (Object) "female"));
 	}
 
+	@Test
+	public void newParamMap_handle_integers() {
+		Customer c = new Customer("Mario", "Rossi", LocalDate.parse("1970-01-02"), "mr", Gender.female);
+		c.incrementAccessCount();
+		Map<String, Object> map = DB.newParamMap(c);
+		assertThat(map, hasEntry("accessCount", (Object) 1));
+	}
 }
