@@ -84,12 +84,15 @@ public class DB {
 
 	private static List<String> toSnakeCase(List<String> names) {
 		List<String> ret = new ArrayList<>(names.size());
-		for (String n: names) {
-			String[] parts = StringUtils.splitByCharacterTypeCamelCase(n);
-			String snakeCase = StringUtils.join(parts, "_");
-			ret.add(snakeCase);
-		}
+		for (String n: names)
+			ret.add(toSnakeCase(n));
 		return ret;
+	}
+
+	private static String toSnakeCase(String n)
+	{
+		String[] parts = StringUtils.splitByCharacterTypeCamelCase(n);
+		return StringUtils.join(parts, "_");
 	}
 
 	private static List<String> toNames(Field[] fields) {
@@ -120,8 +123,7 @@ public class DB {
 				for (Field f: fields) {
 					System.out.println(f.getName());
 					if (! f.isAccessible()) f.setAccessible(true);
-					// FIXME performance
-					String column = toSnakeCase(Collections.singletonList(f.getName())).get(0);
+					String column = toSnakeCase(f.getName());
 					Object value = rs.getObject(column);
 					
 					// FIXME handle all datetime types

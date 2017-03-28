@@ -11,7 +11,8 @@ import org.junit.Test;
 
 import smalljavas.Customer.Gender;
 
-public class DBTest {
+public class DBIT
+{
 
 	@Test
 	public void find_previously_stored_object() throws Exception {
