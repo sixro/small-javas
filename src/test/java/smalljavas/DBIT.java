@@ -28,11 +28,43 @@ public class DBIT
 		c.incrementAccessCount();
 		
 		db.insert(c);
-		Customer fetched = db.fetch(Customer.class, c.getID());
+		Customer fetched = db.select(Customer.class, c.getID());
 		
 		System.out.println("orig ...: " + c);
 		System.out.println("fetched : " + fetched);
 		assertEquals(c, fetched);
+	}
+
+	@Test
+	public void returns_null_when_not_found() throws Exception {
+		Properties props = new Properties();
+		props.setProperty("driverClassName", "com.mysql.cj.jdbc.Driver");
+		props.setProperty("url", "jdbc:mysql://localhost/smalljavas");
+		props.setProperty("username", "root");
+		props.setProperty("password", "f1gaf1ga");
+		
+		BasicDataSource dataSource = BasicDataSourceFactory.createDataSource(props);
+		DB db = new DB(dataSource);
+		
+		assertNull(db.select(Customer.class, ID.valueOf("not-exists")));
+	}
+
+	@Test
+	public void delete_previously_stored_object() throws Exception {
+		Properties props = new Properties();
+		props.setProperty("driverClassName", "com.mysql.cj.jdbc.Driver");
+		props.setProperty("url", "jdbc:mysql://localhost/smalljavas");
+		props.setProperty("username", "root");
+		props.setProperty("password", "f1gaf1ga");
+		
+		BasicDataSource dataSource = BasicDataSourceFactory.createDataSource(props);
+		DB db = new DB(dataSource);
+		Customer c = new Customer("Mario", "Rossi", LocalDate.parse("1970-01-02"), "mr", Gender.male);
+		
+		db.insert(c);
+		db.delete(Customer.class, c.getID());
+		
+		assertNull(db.select(Customer.class, c.getID()));
 	}
 
 	@Test

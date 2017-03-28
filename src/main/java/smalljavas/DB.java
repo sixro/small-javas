@@ -10,6 +10,7 @@ import javax.sql.DataSource;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.slf4j.*;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.*;
 
@@ -35,15 +36,31 @@ public class DB {
 		LOG.info("... {} inserted in {} ms", o, System.currentTimeMillis() -start);
 	}
 
-	public <T> T fetch(Class<T> type, ID id) {
+	public <T> T select(Class<T> type, ID id) {
 		long start = System.currentTimeMillis();
-		LOG.info("fetching {} with identifier {} ...", type, id);
+		LOG.info("selecting {} identified by {} ...", type.getSimpleName(), id);
 		
 		String sql = newSQL("select ${columns} from ${table} where id = :id", type);
-		T object = jdbc.queryForObject(sql, Collections.singletonMap("id", (Object) id.toString()), new DB.AutoMapper<T>(type));
+
+		try {
+			T object = jdbc.queryForObject(sql, Collections.singletonMap("id", (Object) id.toString()), new DB.AutoMapper<T>(type));
+			
+			LOG.info("... returning {} selected in {} ms", object, System.currentTimeMillis() -start);
+			return object;
+		} catch (EmptyResultDataAccessException e) {
+			LOG.warn("... unable to select any {} identified by {} in {} ms", type.getSimpleName(), id, System.currentTimeMillis() -start);
+			return null;
+		}
+	}
+
+	public <T> void delete(Class<T> type, ID id) {
+		long start = System.currentTimeMillis();
+		LOG.info("deleting {} identified by {} ...", type.getSimpleName(), id);
 		
-		LOG.info("... returning {} fetched in {} ms", object, System.currentTimeMillis() -start);
-		return object;
+		String sql = newSQL("delete from ${table} where id = :id", type);
+		jdbc.update(sql, Collections.singletonMap("id", (Object) id.toString()));
+		
+		LOG.info("... {} identified by {} deleted in {} ms", type.getSimpleName(), id, System.currentTimeMillis() -start);
 	}
 
 	static String newSQL(String template, Class<?> type) {
@@ -121,7 +138,7 @@ public class DB {
 				T obj = constructor.newInstance();
 				Field[] fields = type.getDeclaredFields();
 				for (Field f: fields) {
-					System.out.println(f.getName());
+					LOG.debug("... mapping field named '{}' ...", f.getName());
 					if (! f.isAccessible()) f.setAccessible(true);
 					String column = toSnakeCase(f.getName());
 					Object value = rs.getObject(column);
