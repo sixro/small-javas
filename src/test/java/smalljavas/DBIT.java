@@ -64,13 +64,30 @@ public class DBIT
 		assertNull(db.select(Customer.class, c.getID()));
 	}
 
-	// FIXME update_previously_stored_object
-	
+	@Test
+	public void update_previously_stored_object() {
+		Customer c = new Customer("Mario", "Rossi", LocalDate.parse("1970-01-02"), "mr", Gender.male);
+		
+		db.insert(c);
+		
+		c.incrementAccessCount();
+		db.update(c);
+		
+		assertEquals(1, db.select(Customer.class, c.getID()).getAccessCount());
+	}
+
 	@Test
 	public void newSQL_returns_expected_insert_statement() {
 		Customer c = new Customer("Mario", "Rossi", LocalDate.parse("1970-01-02"), "mr", Gender.male);
 		String sql = DB.newSQL("insert into ${table} (${columns}) values (${values})", c.getClass());
 		assertEquals("insert into CUSTOMERS (ID, FIRST_NAME, LAST_NAME, BIRTH_DATE, TITLE, GENDER, ACCESS_COUNT) values (:id, :firstName, :lastName, :birthDate, :title, :gender, :accessCount)", sql);
+	}
+	
+	@Test
+	public void newSQL_returns_expected_update_statement() {
+		Customer c = new Customer("Mario", "Rossi", LocalDate.parse("1970-01-02"), "mr", Gender.male);
+		String sql = DB.newSQL("update ${table} set ${columnsAndValues} where ID = :id", c.getClass());
+		assertEquals("update CUSTOMERS set ID = :id, FIRST_NAME = :firstName, LAST_NAME = :lastName, BIRTH_DATE = :birthDate, TITLE = :title, GENDER = :gender, ACCESS_COUNT = :accessCount where ID = :id", sql);
 	}
 	
 	@Test

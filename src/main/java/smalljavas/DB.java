@@ -53,6 +53,17 @@ public class DB {
 		}
 	}
 
+	public void update(Object o) {
+		long start = System.currentTimeMillis();
+		LOG.info("updating {} ...", o);
+		
+		Class<? extends Object> type = o.getClass();
+		String sql = newSQL("update ${table} set ${columnsAndValues} where id = :id", type);
+		jdbc.update(sql, newParamMap(o));
+		
+		LOG.info("... {} updated in {} ms", type.getSimpleName(), System.currentTimeMillis() -start);
+	}
+
 	public <T> void delete(Class<T> type, ID id) {
 		long start = System.currentTimeMillis();
 		LOG.info("deleting {} identified by {} ...", type.getSimpleName(), id);
@@ -67,17 +78,22 @@ public class DB {
 		long start = System.currentTimeMillis();
 		LOG.info("deleting {} ...", o);
 		
-		Class<? extends Object> type = o.getClass();
+		delete(o.getClass(), idOf(o));
+		
+		LOG.info("... {} deleted in {} ms", o, System.currentTimeMillis() -start);
+	}
+
+	private ID idOf(Object o) {
+		ID id = null;
 		try {
-			Field field = type.getDeclaredField("id");
+			Field field = o.getClass().getDeclaredField("id");
 			if (! field.isAccessible()) field.setAccessible(true);
+			id = (ID) field.get(o);
 			
-			delete(type, (ID) field.get(o));
-			
-			LOG.info("... {} deleted in {} ms", o, System.currentTimeMillis() -start);
 		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
 			throw new RuntimeException(e);
 		}
+		return id;
 	}
 
 	static String newSQL(String template, Class<?> type) {
@@ -85,11 +101,21 @@ public class DB {
 
 		Map<String, Object> valuesByPlaceholder = new HashMap<>();
 		valuesByPlaceholder.put("table", (type.getSimpleName() + "s").toUpperCase());
-		valuesByPlaceholder.put("columns", StringUtils.join(toSnakeCase(fieldNames), ", ").toUpperCase());
-		valuesByPlaceholder.put("values", StringUtils.join(toPrefixed(fieldNames, ":"), ", "));
+		List<String> columns = toSnakeCase(fieldNames);
+		valuesByPlaceholder.put("columns", StringUtils.join(columns, ", "));
+		List<String> placeholders = toPrefixed(fieldNames, ":");
+		valuesByPlaceholder.put("values", StringUtils.join(placeholders, ", "));
+		valuesByPlaceholder.put("columnsAndValues", StringUtils.join(joinEach(columns, placeholders, " = "),  ", "));
 		return StrSubstitutor.replace(template, valuesByPlaceholder);
 	}
 	
+	private static List<String> joinEach(List<String> a, List<String> b, String delimiter) {
+		List<String> ret = new ArrayList<>(a.size());
+		for (int i = 0; i < a.size(); i++)
+			ret.add(a.get(i) + delimiter + b.get(i));
+		return ret;
+	}
+
 	static Map<String, Object> newParamMap(Object o) {
 		Map<String, Object> map = new LinkedHashMap<>();
 		Field[] fields = o.getClass().getDeclaredFields();
@@ -126,7 +152,7 @@ public class DB {
 	private static String toSnakeCase(String n)
 	{
 		String[] parts = StringUtils.splitByCharacterTypeCamelCase(n);
-		return StringUtils.join(parts, "_");
+		return StringUtils.join(parts, "_").toUpperCase();
 	}
 
 	private static List<String> toNames(Field[] fields) {
@@ -137,7 +163,7 @@ public class DB {
 	}
 
 	
-	public static class AutoMapper<T> implements RowMapper<T> {
+	private static class AutoMapper<T> implements RowMapper<T> {
 
 		private final Class<T> type;
 
