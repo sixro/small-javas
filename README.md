@@ -11,12 +11,6 @@ In order to use the dependency, you can use [jitpack.io](https://jitpack.io/#mav
 
 ## TODOs
 
-  * un oggetto __DB__, perche' semplicemente leggere/scrivere i dati e' sempre troppo lento e vorrei qualcosa che con convention over configuration mi possa aiutare ad esser rapido a prototipizzare. Meno cazzi con OneToMany e paduli da ORM, ma neanche scriviti la SQL senno muori... avevo gia' sperimento a riguardo... va ripreso il tema. L'idea l'altra volta era scrivi l'SQL e poi ci penso io a fare il mapper basta che esponi un metodo statico valueOf con i param nell'ordine della query (preso spunto da WEB4J framework)... credo serva qualcosa di piu'... salva sto oggetto in tabella, leggi sto oggetto da tabella, (ripeto) con qualche convention-over-configuration dovrebbe esser fattibile... magari invece di __DB__ trovare un nome piu' chiaro...
-  
-  ** cambiato idea... installo mysql in Cygwin... (se non va lo metto direttamente sulla macchina). Sto seguendo https://www.rafaelhart.com/2014/08/setting-up-mysql-on-cygwin/, e ho attivato solo mysql_install_db
-  ** start developing the object
-    
-  * oggetto __DataSourceFactory__ che fornisca factory methods per creare datasource al volo per specifici DB. Potrebbe usare le datasource dei driver e specificare in javadoc cosa serva come dependencies per poterlo usare, cosi da non richiedere l'introduzione esplicita dei pacchetti e fornire documentazione su eventuali deps da includere (visto che ogni volta e' un casino)
   * oggetto __JSON__? via reflection... troppo complesso? da ragionare...
   * oggetto __REST__ che faccia sia possa esser usato sia come client che come creatore di server? potrebbe sfruttare __JSON__
   * oggetto __WebHook__ che faccia da WebHook... gia' scritto in altro progetto, ma se usasse __REST__ sarebbe fantastico... soprattutto quell'helper che gli consente di mandare via WebHook chiamate prox-ate di un eventuale *listener*
