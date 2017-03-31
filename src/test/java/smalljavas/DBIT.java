@@ -6,7 +6,6 @@ import static org.junit.Assert.*;
 import java.time.LocalDate;
 import java.util.*;
 
-import org.apache.commons.dbcp2.*;
 import org.junit.*;
 
 import smalljavas.Customer.Gender;
@@ -16,14 +15,15 @@ public class DBIT
 	private DB db;
 
 	@Before public void setup() throws Exception {
-		Properties props = new Properties();
-		props.setProperty("driverClassName", "com.mysql.cj.jdbc.Driver");
-		props.setProperty("url", "jdbc:mysql://localhost/smalljavas");
-		props.setProperty("username", "root");
-		props.setProperty("password", "f1gaf1ga");
-		
-		BasicDataSource dataSource = BasicDataSourceFactory.createDataSource(props);
-		db = new DB(dataSource);
+		db = new DB(
+			DataSourceFactory.newMySqlDataSource(
+				"localhost", 
+				"smalljavas", 
+				"root", 
+				"f1gaf1ga", 
+				new Properties()
+			)
+		);
 	}
 	
 	@Test
